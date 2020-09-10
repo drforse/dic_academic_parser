@@ -19,10 +19,10 @@ class Parser:
     def get_word(self, id: int) -> Word:
         r = requests.get(f'{self.base_uri}/{id}')
         soup = BeautifulSoup(r.content, 'lxml')
-        title_html, title = self._get_title(soup)
+        _, title = self._get_title(soup)
         description_html, desciption = self._get_desciption(soup)
         images = self._get_description_images_uris(soup)
-        plain_html = title_html + description_html
+        plain_html = description_html
         return Word(title, desciption, images, plain_html)
 
     @staticmethod
@@ -79,7 +79,7 @@ class Parser:
             id = int(uri.parts[-1])
             dic = cls._get_dic_from_uri(uri)
             word = art_tag.a.get_text()
-            short_description = art_tag.get_text().replace(word,'')
+            short_description = art_tag.get_text()
             results.append(SearchResult(id, word, short_description, dic))
         return results
 
