@@ -12,7 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/drforse/dic_academic_parser",
-    install_requires=["requests==2.24.0", "beautifulsoup4==4.9.1", "lxml=4.5.2", "urlpath==1.1.7"],
+    install_requires=["requests==2.24.0", "beautifulsoup4==4.9.1", "lxml==4.5.2", "urlpath==1.1.7"],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
