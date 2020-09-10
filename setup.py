@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dic_academic_parser",
-    version='0.0.1',
+    version='0.0.2',
     author="drforse",
     author_email="george.lifeslice@gmail.com",
     description="A package for parsing dic.academic.ru",
