@@ -109,6 +109,8 @@ class Parser:
             url = f'https://dic.academic.ru/contents.nsf/{dic.id}'
         elif dic.dic_type == 'subdomain':
             url = f'https://{dic.id}.academic.ru'
+        else:
+            raise DicTypeNotSupported(dic.dic_type)
         r = requests.get(url)
         soup = BeautifulSoup(r.content, 'lxml')
         title = soup.find('title')
