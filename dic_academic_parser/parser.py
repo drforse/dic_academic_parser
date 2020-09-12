@@ -10,9 +10,9 @@ class Parser:
     def __init__(self, dic: Dic):
         self.dic: Dic = dic
         if dic.dic_type == 'nsf':
-            self.base_uri = f'https://dic.academic.ru/dic.nsf/{self.dic.name}'
+            self.base_uri = f'https://dic.academic.ru/dic.nsf/{self.dic.id}'
         elif dic.dic_type == 'subdomain':
-            self.base_uri = f'https://{self.dic.name}.academic.ru'
+            self.base_uri = f'https://{self.dic.id}.academic.ru'
         else:
             raise DicTypeNotSupported(dic.dic_type)
 
@@ -100,3 +100,16 @@ class Parser:
         else:
             dic_name = subdomain
         return Dic(dic_name, dic_type)
+
+    @staticmethod
+    def get_dic_title(dic: Dic) -> str:
+        if dic.title:
+            return dic.title
+        if dic.dic_type == 'nsf':
+            url = f'https://dic.academic.ru/contents.nsf/{dic.id}'
+        elif dic.dic_type == 'subdomain':
+            url = f'https://{dic.id}.academic.ru'
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content, 'lxml')
+        title = soup.find('title')
+        return title.get_text()
