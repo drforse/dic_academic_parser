@@ -1,3 +1,5 @@
+import typing
+
 import requests
 from urlpath import URL
 from bs4 import BeautifulSoup, Tag
@@ -17,6 +19,11 @@ class Parser:
             raise DicTypeNotSupported(dic.dic_type)
 
     def get_word(self, id: int) -> Word:
+        """get Word object by word's id
+
+        Attributes:
+            id (int): word's id, you can get in in Parser.search_all method
+        """
         url = f'{self.base_uri}/{id}'
         r = requests.get(url)
         soup = BeautifulSoup(r.content, 'lxml')
@@ -26,6 +33,50 @@ class Parser:
         plain_html = description_html
         self.dic.title = self._get_dic_title_by_word_soup(soup)
         return Word(title, description, images, plain_html, url, self.dic)
+
+    @classmethod
+    def search_all(cls, query: str) -> typing.List[SearchResult]:
+        """search for all results by a query
+
+        Attributes:
+            query (str): query for search (for ex.: "Слово")
+        """
+        results = []
+        uri = f'https://academic.ru/searchall.php?SWord={query}'
+        r = requests.get(uri)
+        soup = BeautifulSoup(r.content, 'lxml')
+        found_articles = soup.find('ul', {'class': 'terms-list', 'id': 'found_articles'})
+        for art_tag in found_articles.find_all('li'):
+            uri = URL(art_tag.a.attrs['href'])
+            if not uri.parts[-1].isdigit():
+                uri = uri.parent
+            id = int(uri.parts[-1])
+            dic = cls._get_dic_from_uri(uri)
+            dic.title = art_tag.find('p', {'class': 'src'}).get_text()
+            word = art_tag.a.get_text()
+            short_description = art_tag.get_text()
+            results.append(SearchResult(id, word, short_description, dic))
+        return results
+
+    @staticmethod
+    def get_dic_title(dic: Dic) -> str:
+        """get dic title on page of the dic
+
+        Attributes:
+            dic (Dic): Dic object
+        """
+        if dic.title:
+            return dic.title
+        if dic.dic_type == 'nsf':
+            url = f'https://dic.academic.ru/contents.nsf/{dic.id}'
+        elif dic.dic_type == 'subdomain':
+            url = f'https://{dic.id}.academic.ru'
+        else:
+            raise DicTypeNotSupported(dic.dic_type)
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content, 'lxml')
+        title = soup.find('title')
+        return title.get_text()
 
     @staticmethod
     def _get_title(soup: BeautifulSoup) -> tuple:
@@ -69,25 +120,6 @@ class Parser:
             tag = soup.find('dd', {'class': 'descript', 'itemprop': 'definition'})
         return tag
 
-    @classmethod
-    def search_all(cls, query: str):
-        results = []
-        uri = f'https://academic.ru/searchall.php?SWord={query}'
-        r = requests.get(uri)
-        soup = BeautifulSoup(r.content, 'lxml')
-        found_articles = soup.find('ul', {'class': 'terms-list', 'id': 'found_articles'})
-        for art_tag in found_articles.find_all('li'):
-            uri = URL(art_tag.a.attrs['href'])
-            if not uri.parts[-1].isdigit():
-                uri = uri.parent
-            id = int(uri.parts[-1])
-            dic = cls._get_dic_from_uri(uri)
-            dic.title = art_tag.find('p', {'class': 'src'}).get_text()
-            word = art_tag.a.get_text()
-            short_description = art_tag.get_text()
-            results.append(SearchResult(id, word, short_description, dic))
-        return results
-
     @staticmethod
     def _get_dic_from_uri(uri: URL) -> Dic:
         subdomain = uri.hostname.split('.')[0]
@@ -102,21 +134,6 @@ class Parser:
         else:
             dic_name = subdomain
         return Dic(dic_name, dic_type)
-
-    @staticmethod
-    def get_dic_title(dic: Dic) -> str:
-        if dic.title:
-            return dic.title
-        if dic.dic_type == 'nsf':
-            url = f'https://dic.academic.ru/contents.nsf/{dic.id}'
-        elif dic.dic_type == 'subdomain':
-            url = f'https://{dic.id}.academic.ru'
-        else:
-            raise DicTypeNotSupported(dic.dic_type)
-        r = requests.get(url)
-        soup = BeautifulSoup(r.content, 'lxml')
-        title = soup.find('title')
-        return title.get_text()
 
     @staticmethod
     def _get_dic_title_by_word_soup(soup: BeautifulSoup) -> str:
