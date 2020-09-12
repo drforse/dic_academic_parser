@@ -8,3 +8,4 @@ class Word:
     description: str
     images: typing.List[str]
     plain_html: str
+    url: str

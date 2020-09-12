@@ -17,13 +17,14 @@ class Parser:
             raise DicTypeNotSupported(dic.dic_type)
 
     def get_word(self, id: int) -> Word:
-        r = requests.get(f'{self.base_uri}/{id}')
+        url = f'{self.base_uri}/{id}'
+        r = requests.get(url)
         soup = BeautifulSoup(r.content, 'lxml')
         _, title = self._get_title(soup)
         description_html, description = self._get_description(soup)
         images = self._get_description_images_uris(soup)
         plain_html = description_html
-        return Word(title, description, images, plain_html)
+        return Word(title, description, images, plain_html, url)
 
     @staticmethod
     def _get_title(soup: BeautifulSoup) -> tuple:
