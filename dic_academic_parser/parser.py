@@ -20,10 +20,10 @@ class Parser:
         r = requests.get(f'{self.base_uri}/{id}')
         soup = BeautifulSoup(r.content, 'lxml')
         _, title = self._get_title(soup)
-        description_html, desciption = self._get_desciption(soup)
+        description_html, description = self._get_description(soup)
         images = self._get_description_images_uris(soup)
         plain_html = description_html
-        return Word(title, desciption, images, plain_html)
+        return Word(title, description, images, plain_html)
 
     @staticmethod
     def _get_title(soup: BeautifulSoup) -> tuple:
@@ -33,8 +33,8 @@ class Parser:
         return plain_html, title
 
     @classmethod
-    def _get_desciption(cls, soup: BeautifulSoup) -> tuple:
-        tag = cls._get_desciption_tag(soup)
+    def _get_description(cls, soup: BeautifulSoup) -> tuple:
+        tag = cls._get_description_tag(soup)
         text = ''
 
         last_img_num = 0
@@ -43,6 +43,8 @@ class Parser:
             return str(tag), tag.get_text()
         plain_html = str(tag)
         for div in divs:
+            if 'itemtype' in div.attrs:
+                continue
             img = div.find('img')
             if img:
                 last_img_num += 1
@@ -54,12 +56,12 @@ class Parser:
         return plain_html, text
 
     def _get_description_images_uris(self, soup: BeautifulSoup) -> list:
-        descript_tag = self._get_desciption_tag(soup)
+        descript_tag = self._get_description_tag(soup)
         images_tags = descript_tag.find_all('img')
         return [f'{self.base_uri}{tag.attrs["src"]}' for tag in images_tags]
 
     @staticmethod
-    def _get_desciption_tag(soup: BeautifulSoup) -> Tag:
+    def _get_description_tag(soup: BeautifulSoup) -> Tag:
         tag = soup.find('dd', {'class': 'descript', 'itemprop': 'content'})
         if tag is None:
             tag = soup.find('dd', {'class': 'descript', 'itemprop': 'definition'})
