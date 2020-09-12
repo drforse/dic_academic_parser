@@ -24,7 +24,8 @@ class Parser:
         description_html, description = self._get_description(soup)
         images = self._get_description_images_uris(soup)
         plain_html = description_html
-        return Word(title, description, images, plain_html, url)
+        self.dic.title = self._get_dic_title_by_word_soup(soup)
+        return Word(title, description, images, plain_html, url, self.dic)
 
     @staticmethod
     def _get_title(soup: BeautifulSoup) -> tuple:
@@ -81,6 +82,7 @@ class Parser:
                 uri = uri.parent
             id = int(uri.parts[-1])
             dic = cls._get_dic_from_uri(uri)
+            dic.title = art_tag.find('p', {'class': 'src'}).get_text()
             word = art_tag.a.get_text()
             short_description = art_tag.get_text()
             results.append(SearchResult(id, word, short_description, dic))
@@ -115,3 +117,8 @@ class Parser:
         soup = BeautifulSoup(r.content, 'lxml')
         title = soup.find('title')
         return title.get_text()
+
+    @staticmethod
+    def _get_dic_title_by_word_soup(soup: BeautifulSoup) -> str:
+        tag = soup.find('span', {'itemprop': 'title'})
+        return tag.get_text()

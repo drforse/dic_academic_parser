@@ -1,6 +1,8 @@
 import typing
 from dataclasses import dataclass
 
+from . import Dic
+
 
 @dataclass
 class Word:
@@ -9,3 +11,4 @@ class Word:
     images: typing.List[str]
     plain_html: str
     url: str
+    dic: Dic
